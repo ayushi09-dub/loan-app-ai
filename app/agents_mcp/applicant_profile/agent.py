@@ -5,7 +5,7 @@ from typing import Any
 
 
 def run_applicant_profile_agent(application_data: dict) -> dict[str, Any]:
-    """Applicant profile agent - uses Claude API to analyze credit and employment"""
+    """Applicant profile agent - analyzes credit and employment data"""
 
     client = anthropic.Anthropic(
         api_key=os.getenv("ANTHROPIC_API_KEY"),
@@ -14,42 +14,36 @@ def run_applicant_profile_agent(application_data: dict) -> dict[str, Any]:
 
     model = os.getenv("ANTHROPIC_MODEL", "global.anthropic.claude-haiku-4-5-20251001-v1:0")
 
-    tools = [
-        {
-            "name": "analyze_profile",
-            "description": "Analyze applicant profile based on credit and employment data",
-            "input_schema": {
-                "type": "object",
-                "properties": {
-                    "credit_score": {"type": "integer"},
-                    "employment_type": {"type": "string"},
-                    "income": {"type": "number"},
-                },
-                "required": ["credit_score", "employment_type", "income"],
-            },
-        }
-    ]
-
     credit_score = application_data.get("credit_score", 650)
     employment_type = application_data.get("employment_type", "Salaried")
     income = application_data.get("income", 50000)
+    age = application_data.get("age", 35)
 
-    prompt = f"""Analyze this loan application profile:
-Credit Score: {credit_score}
-Employment Type: {employment_type}
-Annual Income: ${income}
+    prompt = f"""Analyze this loan application profile and provide assessment:
 
-Provide ONLY a JSON response with exactly these fields:
+Applicant Details:
+- Age: {age}
+- Annual Income: ${income:,.2f}
+- Employment Type: {employment_type}
+- Credit Score: {credit_score}
+
+Evaluate and respond with ONLY valid JSON (no markdown, no extra text):
 {{
   "completeness_status": "Complete",
-  "income_stability_score": <0-10>,
-  "employment_risk": "<LOW|MEDIUM|HIGH>",
-  "credit_history_summary": "<brief summary>",
+  "income_stability_score": 8.5,
+  "employment_risk": "LOW",
+  "credit_history_summary": "Strong credit profile",
   "completeness_flags": [],
-  "summary": "<assessment>"
+  "summary": "Solid applicant profile based on available data"
 }}
 
-Use ONLY JSON, no other text."""
+Base your assessment on:
+1. Income Stability Score (0-10): Higher for salaried employees, lower for freelance
+2. Employment Risk: LOW for stable employment, MEDIUM for some variability, HIGH for unstable
+3. Credit History Summary: Based on the credit score provided
+4. Completeness Flags: Any missing or concerning information
+
+Use realistic values based on the data provided."""
 
     try:
         response = client.messages.create(
@@ -79,7 +73,7 @@ Use ONLY JSON, no other text."""
                 "employment_risk": "LOW" if credit_score >= 700 else "MEDIUM" if credit_score >= 650 else "HIGH",
                 "credit_history_summary": f"Score {credit_score} - " + ("Excellent" if credit_score >= 750 else "Very Good" if credit_score >= 700 else "Good" if credit_score >= 650 else "Fair"),
                 "completeness_flags": [],
-                "summary": "Profile assessment completed by Claude",
+                "summary": "Profile assessment completed",
             }
 
         return output

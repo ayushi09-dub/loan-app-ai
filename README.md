@@ -85,7 +85,7 @@ Technology Stack
 • Orchestration Engine: LangGraph, LangChain
 • MCP Framework: FastMCP
 • Agent Implementation: FastAPI-based agents
-• LLM: Anthropic Claude Sonnet 4.6
+• LLM: Anthropic Claude Haiku 4.5 (optimized for cost-efficiency)
 • Agent SDK: Anthropic Agent SDK
 • Prompt Engineering
 • Claude Code

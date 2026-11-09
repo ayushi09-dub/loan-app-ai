@@ -13,17 +13,29 @@ risk_thresholds = {
 
 
 @server.call_tool()
-def calculate_dti(income: float, liabilities: float, loan_amount: float) -> dict[str, Any]:
+def calculate_dti(income: float, liabilities: float, loan_amount: float, tenure_months: int = 60) -> dict[str, Any]:
     monthly_income = income / 12
     monthly_liabilities = liabilities / 12
-    monthly_loan_payment = (loan_amount / 12) * 0.01  # rough estimate
+
+    # Calculate monthly loan payment using simple amortization
+    # Assuming ~5% annual interest rate for standard loan
+    annual_rate = 0.05
+    monthly_rate = annual_rate / 12
+    num_payments = tenure_months
+
+    if monthly_rate > 0:
+        monthly_loan_payment = (loan_amount * monthly_rate * (1 + monthly_rate) ** num_payments) / ((1 + monthly_rate) ** num_payments - 1)
+    else:
+        monthly_loan_payment = loan_amount / tenure_months
 
     total_monthly_debt = monthly_liabilities + monthly_loan_payment
-    dti_ratio = (total_monthly_debt / monthly_income) * 100
+    dti_ratio = (total_monthly_debt / monthly_income) * 100 if monthly_income > 0 else 0
 
     return {
         "dti_ratio": round(dti_ratio, 2),
         "monthly_income": round(monthly_income, 2),
+        "monthly_liabilities": round(monthly_liabilities, 2),
+        "monthly_loan_payment": round(monthly_loan_payment, 2),
         "monthly_debt": round(total_monthly_debt, 2),
         "status": "Healthy" if dti_ratio < 36 else "Acceptable" if dti_ratio < 43 else "High",
         "recommendation": "Good debt management" if dti_ratio < 36 else "Monitor carefully" if dti_ratio < 43 else "High risk",

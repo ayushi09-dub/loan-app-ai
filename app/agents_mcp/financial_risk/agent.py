@@ -5,7 +5,7 @@ from typing import Any
 
 
 def run_financial_risk_agent(application_data: dict) -> dict[str, Any]:
-    """Financial risk agent - uses Claude API to evaluate financial metrics"""
+    """Financial risk agent - evaluates financial metrics and risk factors"""
 
     client = anthropic.Anthropic(
         api_key=os.getenv("ANTHROPIC_API_KEY"),
@@ -14,50 +14,45 @@ def run_financial_risk_agent(application_data: dict) -> dict[str, Any]:
 
     model = os.getenv("ANTHROPIC_MODEL", "global.anthropic.claude-haiku-4-5-20251001-v1:0")
 
-    tools = [
-        {
-            "name": "evaluate_risk",
-            "description": "Evaluate financial risk based on income, liabilities, and loan amount",
-            "input_schema": {
-                "type": "object",
-                "properties": {
-                    "income": {"type": "number"},
-                    "liabilities": {"type": "number"},
-                    "loan_amount": {"type": "number"},
-                },
-                "required": ["income", "liabilities", "loan_amount"],
-            },
-        }
-    ]
-
     income = application_data.get("income", 50000)
     liabilities = application_data.get("existing_liabilities", 0)
     loan_amount = application_data.get("loan_amount", 100000)
     credit_score = application_data.get("credit_score", 650)
+    tenure_months = application_data.get("tenure_months", 60)
 
     monthly_income = income / 12
-    monthly_debt = liabilities / 12 + (loan_amount / 360)
+    monthly_loan_payment = loan_amount / tenure_months
+    monthly_debt = (liabilities / 12) + monthly_loan_payment
     dti_ratio = (monthly_debt / monthly_income * 100) if monthly_income > 0 else 0
 
-    prompt = f"""Analyze financial risk for this loan:
-Income: ${income}
-Existing Liabilities: ${liabilities}
-Requested Loan: ${loan_amount}
-Credit Score: {credit_score}
-Calculated DTI: {dti_ratio:.1f}%
+    prompt = f"""Analyze the financial risk profile for this loan application:
 
-Provide ONLY JSON:
+Financial Details:
+- Annual Income: ${income:,.2f}
+- Existing Liabilities: ${liabilities:,.2f}
+- Requested Loan Amount: ${loan_amount:,.2f}
+- Loan Tenure: {tenure_months} months
+- Credit Score: {credit_score}
+- Calculated DTI Ratio: {dti_ratio:.1f}%
+
+Provide risk assessment as ONLY valid JSON (no markdown, no extra text):
 {{
-  "dti_ratio": {dti_ratio:.1f},
-  "credit_score_risk": "<LOW|MEDIUM|HIGH>",
-  "loan_amount_risk": "<ACCEPTABLE|MODERATE|HIGH>",
+  "dti_ratio": 35.5,
+  "credit_score_risk": "LOW",
+  "loan_amount_risk": "ACCEPTABLE",
   "anomaly_flags": [],
-  "overall_risk_score": <0-10>,
-  "reasoning": "<brief explanation>",
-  "summary": "<assessment>"
+  "overall_risk_score": 3.5,
+  "reasoning": "Strong income, manageable DTI, acceptable loan-to-income ratio",
+  "summary": "Financial profile shows acceptable risk levels"
 }}
 
-Use ONLY JSON, no other text."""
+Evaluation criteria:
+- DTI Ratio < 36% = Healthy, 36-43% = Acceptable, > 43% = High Risk
+- Credit Score >= 750 = LOW risk, 650-749 = MEDIUM risk, < 650 = HIGH risk
+- Loan-to-Income: <= 3x annual income = ACCEPTABLE, 3-5x = MODERATE, > 5x = HIGH
+- Risk Score: 0-3 = Low, 3-6 = Medium, 6-10 = High
+
+Use realistic assessment based on the data."""
 
     try:
         response = client.messages.create(
@@ -88,7 +83,7 @@ Use ONLY JSON, no other text."""
                 "anomaly_flags": [],
                 "overall_risk_score": risk,
                 "reasoning": f"DTI {dti_ratio:.1f}% - Credit {credit_score}",
-                "summary": "Financial analysis by Claude",
+                "summary": "Financial analysis completed",
             }
 
         output["risk_scores"] = {

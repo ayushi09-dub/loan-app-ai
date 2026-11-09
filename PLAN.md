@@ -270,7 +270,7 @@ streamlit run app/ui/streamlit_app.py
 
 | Decision | Choice | Reason |
 |---|---|---|
-| LLM | Claude Sonnet 4.6 | Specified in requirements; strong reasoning |
+| LLM | Claude Haiku 4.5 | Fast, efficient, cost-optimized for agentic workflows |
 | Agent SDK | Anthropic SDK (`client.beta.messages`) | Native tool use with MCP |
 | MCP Framework | FastMCP | Lightweight, Python-native MCP server |
 | Orchestration | LangGraph | State machine model fits sequential agent pipeline |

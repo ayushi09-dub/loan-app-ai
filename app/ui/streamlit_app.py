@@ -264,11 +264,13 @@ with col2:
             with col_metric1:
                 risk_score = result.get("risk_score", 5)
                 risk_color = "#28a745" if risk_score <= 3.5 else "#ffc107" if risk_score <= 6 else "#dc3545"
+                risk_label = "Low Risk" if risk_score <= 3.5 else "Medium Risk" if risk_score <= 6 else "High Risk"
+                risk_class = "risk-low" if risk_score <= 3.5 else "risk-medium" if risk_score <= 6 else "risk-high"
                 st.markdown(f"""
                 <div class="metric-card">
                     <strong>Risk Score</strong><br>
                     <span style="font-size: 2rem; color: {risk_color};">{risk_score} / 10</span>
-                    <br><span class="risk-low">Low Risk</span>
+                    <br><span class="{risk_class}">{risk_label}</span>
                 </div>
                 """, unsafe_allow_html=True)
 
