@@ -1,0 +1,13 @@
+anthropic
+langchain
+langgraph
+langchain-anthropic
+fastmcp
+fastapi
+uvicorn
+streamlit
+httpx
+python-dotenv
+pydantic
+pytest
+pytest-asyncio
