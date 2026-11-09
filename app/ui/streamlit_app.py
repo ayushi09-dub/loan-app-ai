@@ -208,10 +208,17 @@ with col2:
                 """)
 
             with st.expander("💰 **Financial Risk Assessment**", expanded=True):
+                dti_value = risk.get('dti_ratio', 28.5)
+                if dti_value < 36:
+                    dti_status = "Healthy"
+                elif dti_value < 43:
+                    dti_status = "Acceptable"
+                else:
+                    dti_status = "High Risk"
                 st.info(f"""
                 **Agent:** Financial Risk Analysis Agent
 
-                - 📊 Debt-to-Income Ratio: {risk.get('dti_ratio', 28.5)}% (Healthy)
+                - 📊 Debt-to-Income Ratio: {dti_value}% ({dti_status})
                 - 📈 Credit Risk Level: {risk.get('credit_score_risk', 'LOW')}
                 - 💵 Loan Amount Risk: {risk.get('loan_amount_risk', 'ACCEPTABLE')}
                 - 🚨 Anomaly Flags: {', '.join(risk.get('anomaly_flags', [])) or 'NONE'}
@@ -275,11 +282,20 @@ with col2:
 
             with col_metric3:
                 dti = risk.get("dti_ratio", 28.5)
+                if dti < 36:
+                    dti_color = "#28a745"
+                    dti_status = "Healthy"
+                elif dti < 43:
+                    dti_color = "#ffc107"
+                    dti_status = "Acceptable"
+                else:
+                    dti_color = "#dc3545"
+                    dti_status = "High Risk"
                 st.markdown(f"""
                 <div class="metric-card">
                     <strong>DTI Ratio</strong><br>
-                    <span style="font-size: 2rem; color: #28a745;">{dti}%</span>
-                    <br><span class="risk-low">Healthy</span>
+                    <span style="font-size: 2rem; color: {dti_color};">{dti}%</span>
+                    <br><span style="color: {dti_color}; font-weight: bold;">{dti_status}</span>
                 </div>
                 """, unsafe_allow_html=True)
 
