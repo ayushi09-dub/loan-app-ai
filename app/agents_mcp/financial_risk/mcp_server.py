@@ -1,7 +1,15 @@
 from typing import Any
-from fastmcp import Server
 
-server = Server("financial-risk-db")
+try:
+    from fastmcp import Server
+    server = Server("financial-risk-db")
+except ImportError:
+    class FakeServer:
+        def call_tool(self):
+            def decorator(func):
+                return func
+            return decorator
+    server = FakeServer()
 
 risk_thresholds = {
     "excellent": (751, 850),
@@ -86,8 +94,8 @@ def detect_anomalies(
     loan_income_ratio = application_data.get("loan_amount", 0) / max(
         application_data.get("income", 1), 1
     )
-    if loan_income_ratio > 5:
-        anomalies.append("Loan amount exceeds 5x annual income")
+    if loan_income_ratio > 4:
+        anomalies.append("Loan amount exceeds 4x annual income")
 
     dti_calc = calculate_dti(
         application_data.get("income", 1),
@@ -114,10 +122,10 @@ def calculate_loan_amount_risk(
 ) -> dict[str, Any]:
     loan_to_income = loan_amount / income
 
-    if loan_to_income <= 2:
+    if loan_to_income <= 2.5:
         risk_category = "Low"
         risk_score = 2.0
-    elif loan_to_income <= 3:
+    elif loan_to_income <= 3.5:
         risk_category = "Medium"
         risk_score = 4.0
     elif loan_to_income <= 5:

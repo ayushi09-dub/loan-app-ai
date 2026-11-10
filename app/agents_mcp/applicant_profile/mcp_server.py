@@ -1,9 +1,17 @@
 import json
 from typing import Any
-from fastmcp import Server
 from pydantic import BaseModel
 
-server = Server("applicant-profile-db")
+try:
+    from fastmcp import Server
+    server = Server("applicant-profile-db")
+except ImportError:
+    class FakeServer:
+        def call_tool(self):
+            def decorator(func):
+                return func
+            return decorator
+    server = FakeServer()
 
 applicant_database = {
     "APP-001": {

@@ -2,7 +2,14 @@ import json
 import uuid
 from datetime import datetime
 from typing import Any
-from fastmcp import Server
+try:
+    from fastmcp import Server
+except ImportError:
+    class FakeServer:
+        def call_tool(self):
+            def decorator(func):
+                return func
+            return decorator
 
 server = Server("notification-system")
 
